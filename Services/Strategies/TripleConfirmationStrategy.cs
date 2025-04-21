@@ -1,10 +1,11 @@
-
 using System.Collections.Generic;
 using System.Linq;
-using BinanceTradingBot.Models;
+using BinanceTradingBot.Domain.Enums;
+using BinanceTradingBot.Domain.Models;
+using BinanceTradingBot.Domain.Entities;
 using BinanceTradingBot.Utilities;
 
-namespace BinanceTradingBot.Services.Strategies
+namespace BinanceTradingBot.Application.Strategies
 {
     public class TripleConfirmationStrategy
     {
@@ -24,13 +25,13 @@ namespace BinanceTradingBot.Services.Strategies
 
             var rsi = IndicatorHelper.CalculateRsi(closePrices, _params.RsiPeriod).Last();
             var (macdLine, signalLine) = IndicatorHelper.CalculateMacd(closePrices, _params.MacdFastPeriod, _params.MacdSlowPeriod, _params.MacdSignalPeriod);
-            var (upper, middle, lower) = IndicatorHelper.CalculateBollingerBands(closePrices, _params.BbPeriod, _params.BbStdDev);
+            var (upper, middle, lower) = IndicatorHelper.CalculateBollingerBands(closePrices, _params.BbPeriod, (double)_params.BbStdDev);
             var bbWidth = (upper.Last() - lower.Last()) / middle.Last();
 
             bool breakout = latest.Close > upper.Last();
             bool macdBull = macdLine.Last() > signalLine.Last();
-            bool rsiLow = rsi < _params.RsiOversold;
-            bool bbSqueeze = bbWidth < _params.BbWidthThreshold;
+            bool rsiLow = rsi < (decimal)_params.RsiOversold;
+            bool bbSqueeze = bbWidth < (decimal)_params.BbWidthThreshold;
 
             if (breakout && macdBull && rsiLow && bbSqueeze)
             {

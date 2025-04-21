@@ -1,0 +1,5 @@
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.csproj.AssemblyReference.cache
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.AssemblyInfoInputs.cache
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.AssemblyInfo.cs
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.csproj.CoreCompileInputs.cache
