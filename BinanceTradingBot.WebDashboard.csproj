@@ -42,7 +42,6 @@
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="BinanceTradingBot.csproj" />
   </ItemGroup>
 
 </Project>

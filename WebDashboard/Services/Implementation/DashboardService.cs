@@ -326,7 +326,7 @@ namespace BinanceTradingBot.WebDashboard.Services.Implementation
                 .OrderBy(p => p.CloseTime)
                 .ToList();
 
-            equityCurve.Add(new KeyValuePair<DateTime, decimal>(DateTime.MinValue, 0)); // Starting point
+            equityCurve.Add(new KeyValuePair<DateTime, decimal>(sortedPositions.FirstOrDefault()?.OpenTime ?? DateTime.UtcNow.AddDays(-30), 0)); // Starting point
 
             foreach (var position in sortedPositions)
             {

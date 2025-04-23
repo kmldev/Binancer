@@ -9,5 +9,7 @@ namespace BinanceTradingBot.WebDashboard.Services
         Task<ServiceResult<AuthResponseDTO>> AuthenticateAsync(string username, string password);
         Task<ServiceResult<AuthResponseDTO>> RegisterUserAsync(RegisterDTO register);
         Task<ServiceResult> ChangePasswordAsync(string username, string currentPassword, string newPassword);
+        Task<ServiceResult<AuthResponseDTO>> RefreshTokenAsync(string accessToken, string refreshToken);
+        Task<ServiceResult> RevokeTokenAsync(string username);
     }
 }

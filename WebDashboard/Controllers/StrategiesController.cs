@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using BinanceTradingBot.WebDashboard.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace BinanceTradingBot.WebDashboard.Controllers
 {
