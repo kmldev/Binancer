@@ -11,12 +11,11 @@
     <Authors>Your Name</Authors>
     <Description>A sophisticated trading bot for Binance cryptocurrency exchange</Description>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <!-- Disable warning as error for package downgrade issues -->
-    <NoWarn>$(NoWarn);NU1605</NoWarn>
+    <NoWarn>$(NoWarn);NU1605;CS8618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Core dependencies - using .NET 8.0 versions -->
+    <!-- Core dependencies - using consistent .NET 8.0 versions -->
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
@@ -26,19 +25,20 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
-    
-    <!-- Database dependencies - using .NET 8.0 versions -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
+
+    <!-- Database dependencies - all must be exactly 8.0.4 -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    
+
     <!-- Redis cache -->
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.4" />
-    
+
     <!-- Logging -->
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
@@ -48,11 +48,11 @@
     <PackageReference Include="Serilog.Formatting.Compact" Version="2.0.0" />
     <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
-    
-    <!-- Utilities - Use Newtonsoft.Json instead of System.Text.Json to avoid vulnerabilities -->
+
+    <!-- Utilities -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Polly" Version="8.2.0" />
-    
+
     <!-- API and Web -->
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.4" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" Condition="'$(Configuration)' == 'Debug'" />

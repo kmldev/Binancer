@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging; // Added missing using directive
 using BinanceTradingBot.WebDashboard.Services;
 using Microsoft.AspNetCore.Authorization;
+using System; // Added missing using directive for Exception
+using System.Threading.Tasks; // Added missing using directive for Task
 
 namespace BinanceTradingBot.WebDashboard.Controllers
 {

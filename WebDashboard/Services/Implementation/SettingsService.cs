@@ -1,217 +1,139 @@
-using Microsoft.Extensions.Options;
-using System.Text.Json;
 using BinanceTradingBot.WebDashboard.Models;
 using BinanceTradingBot.WebDashboard.Models.DTOs;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Hosting; // Assuming IWebHostEnvironment is here
-using System.IO;
-using System.Text.Json.Nodes; // Required for JsonObject
+using BinanceTradingBot.WebDashboard.Repositories;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace BinanceTradingBot.WebDashboard.Services.Implementation
 {
+    /// <summary>
+    /// Implémentation du service pour gérer les paramètres de l'application
+    /// </summary>
     public class SettingsService : ISettingsService
     {
-        private readonly ILogger<SettingsService> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly IOptionsMonitor<AppSettings> _appSettings;
-        private readonly string _settingsFilePath;
+        private readonly ISettingsRepository _settingsRepository;
+        private readonly IDistributedCache _cache;
+        private const string SettingsCacheKey = "AppSettings";
 
-        public SettingsService(
-            ILogger<SettingsService> logger,
-            IConfiguration configuration,
-            IOptionsMonitor<AppSettings> appSettings,
-            IWebHostEnvironment hostEnvironment)
+        public SettingsService(ISettingsRepository settingsRepository, IDistributedCache cache)
         {
-            _logger = logger;
-            _configuration = configuration;
-            _appSettings = appSettings;
-            _settingsFilePath = Path.Combine(hostEnvironment.ContentRootPath, "appsettings.json");
+            _settingsRepository = settingsRepository;
+            _cache = cache;
         }
 
+        /// <summary>
+        /// Récupère les paramètres de l'application
+        /// </summary>
+        /// <returns>DTO des paramètres de l'application</returns>
         public async Task<AppSettingsDTO> GetSettingsAsync()
         {
-            try
+            var cachedSettings = await _cache.GetAsync(SettingsCacheKey);
+            if (cachedSettings != null)
             {
-                // Récupérer les paramètres depuis la configuration
-                var settings = _appSettings.CurrentValue;
+                var json = Encoding.UTF8.GetString(cachedSettings);
+                return JsonConvert.DeserializeObject<AppSettingsDTO>(json);
+            }
 
-                return new AppSettingsDTO
-                {
-                    UseTestnet = settings.UseTestnet,
-                    DefaultStrategy = settings.DefaultStrategy,
-                    RefreshInterval = settings.RefreshInterval,
-                    MinConfidenceThreshold = settings.MinConfidenceThreshold,
-                    RiskPerTradePercentage = settings.RiskPerTradePercentage,
-                    MinOrderAmount = settings.MinOrderAmount,
-                    AllowMultiplePositions = settings.AllowMultiplePositions,
-                    UseStopLoss = settings.UseStopLoss,
-                    UseTakeProfit = settings.TakeProfit,
-                    StopLossPercentage = settings.StopLossPercentage,
-                    TakeProfitPercentage = settings.TakeProfitPercentage,
-                    UseDynamicStopLoss = settings.UseDynamicStopLoss,
-                    RestrictTradingHours = settings.RestrictTradingHours,
-                    TradingHoursStart = settings.TradingHoursStart,
-                    TradingHoursEnd = settings.TradingHoursEnd,
-                    EnableEmailNotifications = settings.EnableEmailNotifications,
-                    EnableTelegramNotifications = settings.EnableTelegramNotifications
-                };
-            }
-            catch (Exception ex)
+            var settings = await _settingsRepository.GetAllSettingsAsync();
+            
+            // Map dictionary to AppSettingsDTO
+            var appSettings = new AppSettingsDTO();
+            // Assuming keys in dictionary match property names in AppSettingsDTO
+            // This mapping needs to be more robust, potentially using reflection or a dedicated mapper
+            // For simplicity, direct assignment for known keys:
+            if (settings.TryGetValue("BinanceApiKey", out var apiKey))
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des paramètres");
-                throw;
+                appSettings.BinanceApiKey = apiKey;
             }
+            if (settings.TryGetValue("BinanceApiSecret", out var apiSecret))
+            {
+                appSettings.BinanceApiSecret = apiSecret;
+            }
+            // Add other settings properties as needed
+
+            // Cache the settings
+            var jsonToCache = JsonConvert.SerializeObject(appSettings);
+            await _cache.SetAsync(SettingsCacheKey, Encoding.UTF8.GetBytes(jsonToCache), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30) // Cache for 30 minutes
+            });
+
+            return appSettings;
         }
 
-        public async Task<ServiceResult> UpdateSettingsAsync(AppSettingsDTO settingsDTO)
+        /// <summary>
+        /// Met à jour les paramètres de l'application
+        /// </summary>
+        /// <param name="settings">DTO des paramètres de l'application</param>
+        /// <returns>Résultat du service</returns>
+        public async Task<ServiceResult> UpdateSettingsAsync(AppSettingsDTO settings)
         {
-            try
+            // Map AppSettingsDTO to dictionary
+            var settingsDictionary = new Dictionary<string, string>();
+            // Assuming property names in AppSettingsDTO match keys in dictionary
+            // This mapping needs to be more robust
+            if (!string.IsNullOrEmpty(settings.BinanceApiKey))
             {
-                // Lire le fichier de configuration existant
-                var json = await File.ReadAllTextAsync(_settingsFilePath);
-                var jsonDocument = JsonDocument.Parse(json);
-                var rootElement = jsonDocument.RootElement;
-
-                // Créer une copie modifiable du document JSON
-                using var jsonDoc = JsonDocument.Parse(json);
-                var jsonObject = new JsonObject();
-
-                // Copier toutes les propriétés existantes
-                foreach (var property in jsonDoc.RootElement.EnumerateObject())
-                {
-                    jsonObject.Add(property.Name, JsonDocument.Parse(property.Value.GetRawText()).RootElement.Clone());
-                }
-
-                // Mettre à jour les propriétés
-                jsonObject["UseTestnet"] = JsonValue.Create(settingsDTO.UseTestnet);
-                jsonObject["DefaultStrategy"] = JsonValue.Create(settingsDTO.DefaultStrategy);
-                jsonObject["RefreshInterval"] = JsonValue.Create(settingsDTO.RefreshInterval);
-                jsonObject["MinConfidenceThreshold"] = JsonValue.Create(settingsDTO.MinConfidenceThreshold);
-                jsonObject["RiskPerTradePercentage"] = JsonValue.Create(settingsDTO.RiskPerTradePercentage);
-                jsonObject["MinOrderAmount"] = JsonValue.Create(settingsDTO.MinOrderAmount);
-                jsonObject["AllowMultiplePositions"] = JsonValue.Create(settingsDTO.AllowMultiplePositions);
-                jsonObject["UseStopLoss"] = JsonValue.Create(settingsDTO.UseStopLoss);
-                jsonObject["UseTakeProfit"] = JsonValue.Create(settingsDTO.TakeProfit);
-                jsonObject["StopLossPercentage"] = JsonValue.Create(settingsDTO.StopLossPercentage);
-                jsonObject["TakeProfitPercentage"] = JsonValue.Create(settingsDTO.TakeProfitPercentage);
-                jsonObject["UseDynamicStopLoss"] = JsonValue.Create(settingsDTO.UseDynamicStopLoss);
-                jsonObject["RestrictTradingHours"] = JsonValue.Create(settingsDTO.RestrictTradingHours);
-                jsonObject["TradingHoursStart"] = JsonValue.Create(settingsDTO.TradingHoursStart);
-                jsonObject["TradingHoursEnd"] = JsonValue.Create(settingsDTO.TradingHoursEnd);
-                jsonObject["EnableEmailNotifications"] = JsonValue.Create(settingsDTO.EnableEmailNotifications);
-                jsonObject["EnableTelegramNotifications"] = JsonValue.Create(settingsDTO.EnableTelegramNotifications);
-
-                // Écrire dans le fichier
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-
-                var updatedJson = JsonSerializer.Serialize(jsonObject, options);
-                await File.WriteAllTextAsync(_settingsFilePath, updatedJson);
-
-                return ServiceResult.Ok("Paramètres mis à jour avec succès");
+                settingsDictionary["BinanceApiKey"] = settings.BinanceApiKey;
             }
-            catch (Exception ex)
+            if (!string.IsNullOrEmpty(settings.BinanceApiSecret))
             {
-                _logger.LogError(ex, "Erreur lors de la mise à jour des paramètres");
-                return ServiceResult.Error($"Erreur lors de la mise à jour des paramètres: {ex.Message}");
+                settingsDictionary["BinanceApiSecret"] = settings.BinanceApiSecret;
             }
+            // Add other settings properties as needed
+
+            await _settingsRepository.UpdateSettingsAsync(settingsDictionary);
+            
+            // Invalidate the cache
+            await _cache.RemoveAsync(SettingsCacheKey);
+
+            return ServiceResult.Success();
         }
 
+        /// <summary>
+        /// Met à jour les paramètres de gestion des risques
+        /// </summary>
+        /// <param name="settings">DTO des paramètres de gestion des risques</param>
+        /// <returns>Résultat du service</returns>
         public async Task<ServiceResult> UpdateRiskManagementSettingsAsync(RiskManagementSettingsDTO settings)
         {
-            try
+            var settingsDictionary = new Dictionary<string, string>
             {
-                // Lire le fichier de configuration existant
-                var json = await File.ReadAllTextAsync(_settingsFilePath);
-                var jsonDocument = JsonDocument.Parse(json);
-                var rootElement = jsonDocument.RootElement;
+                { "MaxDrawdown", settings.MaxDrawdown.ToString() },
+                { "MaxPositionSize", settings.MaxPositionSize.ToString() },
+                // Add other risk management settings
+            };
 
-                // Créer une copie modifiable du document JSON
-                using var jsonDoc = JsonDocument.Parse(json);
-                var jsonObject = new JsonObject();
+            await _settingsRepository.UpdateSettingsAsync(settingsDictionary);
+            
+            // Invalidate the cache
+            await _cache.RemoveAsync(SettingsCacheKey);
 
-                // Copier toutes les propriétés existantes
-                foreach (var property in jsonDoc.RootElement.EnumerateObject())
-                {
-                    jsonObject.Add(property.Name, JsonDocument.Parse(property.Value.GetRawText()).RootElement.Clone());
-                }
-
-                // Mettre à jour les propriétés de gestion du risque
-                jsonObject["MaxPortfolioExposure"] = JsonValue.Create(settings.MaxPortfolioExposure);
-                jsonObject["CriticalExposureThreshold"] = JsonValue.Create(settings.CriticalExposureThreshold);
-                jsonObject["MaxPositionSize"] = JsonValue.Create(settings.MaxPositionSize);
-                jsonObject["MaxAllowedVolatility"] = JsonValue.Create(settings.MaxAllowedVolatility);
-                jsonObject["EmergencyExitThreshold"] = JsonValue.Create(settings.EmergencyExitThreshold);
-                jsonObject["MaxPositionDays"] = JsonValue.Create(settings.MaxPositionDays);
-                jsonObject["MaxDailyLoss"] = JsonValue.Create(settings.MaxDailyLoss);
-
-                // Écrire dans le fichier
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-
-                var updatedJson = JsonSerializer.Serialize(jsonObject, options);
-                await File.WriteAllTextAsync(_settingsFilePath, updatedJson);
-
-                return ServiceResult.Ok("Paramètres de gestion du risque mis à jour avec succès");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la mise à jour des paramètres de gestion du risque");
-                return ServiceResult.Error($"Erreur lors de la mise à jour des paramètres: {ex.Message}");
-            }
+            return ServiceResult.Success();
         }
 
+        /// <summary>
+        /// Met à jour les identifiants API
+        /// </summary>
+        /// <param name="credentials">DTO des identifiants API</param>
+        /// <returns>Résultat du service</returns>
         public async Task<ServiceResult> UpdateApiCredentialsAsync(ApiCredentialsDTO credentials)
         {
-            try
+            var settingsDictionary = new Dictionary<string, string>
             {
-                // Vérifier que les informations d'API sont valides
-                if (string.IsNullOrWhiteSpace(credentials.ApiKey) || string.IsNullOrWhiteSpace(credentials.ApiSecret))
-                {
-                    return ServiceResult.Error("La clé API et le secret API ne peuvent pas être vides");
-                }
+                { "BinanceApiKey", credentials.ApiKey },
+                { "BinanceApiSecret", credentials.ApiSecret }
+            };
 
-                // Lire le fichier de configuration existant
-                var json = await File.ReadAllTextAsync(_settingsFilePath);
-                var jsonDocument = JsonDocument.Parse(json);
-                var rootElement = jsonDocument.RootElement;
+            await _settingsRepository.UpdateSettingsAsync(settingsDictionary);
+            
+            // Invalidate the cache
+            await _cache.RemoveAsync(SettingsCacheKey);
 
-                // Créer une copie modifiable du document JSON
-                using var jsonDoc = JsonDocument.Parse(json);
-                var jsonObject = new JsonObject();
-
-                // Copier toutes les propriétés existantes
-                foreach (var property in jsonDoc.RootElement.EnumerateObject())
-                {
-                    jsonObject.Add(property.Name, JsonDocument.Parse(property.Value.GetRawText()).RootElement.Clone());
-                }
-
-                // Mettre à jour les informations d'API
-                jsonObject["ApiKey"] = JsonValue.Create(credentials.ApiKey);
-                jsonObject["ApiSecret"] = JsonValue.Create(credentials.ApiSecret);
-                jsonObject["UseTestnet"] = JsonValue.Create(credentials.UseTestnet);
-
-                // Écrire dans le fichier
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-
-                var updatedJson = JsonSerializer.Serialize(jsonObject, options);
-                await File.WriteAllTextAsync(_settingsFilePath, updatedJson);
-
-                return ServiceResult.Ok("Informations d'API mises à jour avec succès");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la mise à jour des informations d'API");
-                return ServiceResult.Error($"Erreur lors de la mise à jour des informations d'API: {ex.Message}");
-            }
+            return ServiceResult.Success();
         }
     }
 }

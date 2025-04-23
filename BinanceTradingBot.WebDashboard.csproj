@@ -5,15 +5,21 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>BinanceTradingBot-WebDashboard-78a2ff8c-7d7e</UserSecretsId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Référence au projet principal -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.8.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
     <ProjectReference Include="..\BinanceTradingBot.csproj" />
     
     <!-- Packages pour l'authentification et l'autorisation -->
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
     
     <!-- UI Packages -->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.4" Condition="'$(Configuration)' == 'Debug'" />
@@ -24,6 +30,8 @@
     
     <!-- Outils de monitoring -->
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+    
+    <!-- IdentityModel for token handling -->
   </ItemGroup>
 
   <!-- Configuration pour les assets statiques -->
@@ -32,6 +40,9 @@
     <Folder Include="wwwroot\js\" />
     <Folder Include="wwwroot\lib\" />
     <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="BinanceTradingBot.csproj" />
   </ItemGroup>
 
 </Project>

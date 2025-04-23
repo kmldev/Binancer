@@ -1,0 +1,9 @@
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.csproj.AssemblyReference.cache
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.AssemblyInfoInputs.cache
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.AssemblyInfo.cs
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.csproj.CoreCompileInputs.cache
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.RazorAssemblyInfo.cache
+C:\Users\giuantemp\Desktop\2025\obj\Debug\net8.0\BinanceTradingBot.WebDashboard.RazorAssemblyInfo.cs
