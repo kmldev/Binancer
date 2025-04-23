@@ -1,0 +1,81 @@
+@model IEnumerable<BinanceTradingBot.WebDashboard.Models.DTOs.TradingPairDTO>
+@{
+    ViewData["Title"] = "Paires de Trading";
+}
+
+<div class="container-fluid mt-4">
+    <h1>@ViewData["Title"]</h1>
+
+    <div class="card">
+        <div class="card-header">
+            Liste des Paires de Trading
+            <button class="btn btn-primary btn-sm float-end" id="addTradingPairBtn">Ajouter une Paire</button>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Symbole</th>
+                        <th>Actif de Base</th>
+                        <th>Actif de Cotation</th>
+                        <th>Précision Prix</th>
+                        <th>Précision Quantité</th>
+                        <th>Min Notional</th>
+                        <th>Min Quantité</th>
+                        <th>Max Quantité</th>
+                        <th>Step Size</th>
+                        <th>Tick Size</th>
+                        <th>Actif</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pair in Model)
+                    {
+                        <tr>
+                            <td>@pair.Symbol</td>
+                            <td>@pair.BaseAsset</td>
+                            <td>@pair.QuoteAsset</td>
+                            <td>@pair.PricePrecision</td>
+                            <td>@pair.QuantityPrecision</td>
+                            <td>@pair.MinNotional.ToString("N4")</td>
+                            <td>@pair.MinQuantity.ToString("N4")</td>
+                            <td>@pair.MaxQuantity.ToString("N4")</td>
+                            <td>@pair.StepSize.ToString("N8")</td>
+                            <td>@pair.TickSize.ToString("N8")</td>
+                            <td><span class="badge bg-@(pair.IsActive ? "success" : "danger")">@(pair.IsActive ? "Oui" : "Non")</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary edit-pair-btn" data-symbol="@pair.Symbol">Modifier</button>
+                                <button class="btn btn-sm btn-@(pair.IsActive ? "warning" : "success") toggle-active-btn" data-symbol="@pair.Symbol">@(pair.IsActive ? "Désactiver" : "Activer")</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Placeholder for JavaScript to handle button clicks and data updates
+        $(document).ready(function () {
+            $('#addTradingPairBtn').click(function () {
+                // Implement modal or form to add new trading pair
+                alert('Ajouter une nouvelle paire de trading');
+            });
+
+            $('.edit-pair-btn').click(function () {
+                var symbol = $(this).data('symbol');
+                // Implement modal or form to edit trading pair
+                alert('Modifier la paire ' + symbol);
+            });
+
+            $('.toggle-active-btn').click(function () {
+                var symbol = $(this).data('symbol');
+                // Implement AJAX call to toggle active status
+                alert('Basculer l\'état actif pour ' + symbol);
+            });
+        });
+    </script>
+}

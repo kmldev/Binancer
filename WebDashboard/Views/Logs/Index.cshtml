@@ -1,0 +1,157 @@
+@{
+    ViewData["Title"] = "Logs";
+}
+
+<div class="container-fluid mt-4">
+    <h1>@ViewData["Title"]</h1>
+
+    <div class="card">
+        <div class="card-header">
+            Journaux d'Application
+        </div>
+        <div class="card-body">
+            <!-- Filter Options -->
+            <form id="logFilterForm" class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label for="logLevelFilter" class="form-label">Niveau</label>
+                    <select id="logLevelFilter" name="level" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="Information">Information</option>
+                        <option value="Warning">Warning</option>
+                        <option value="Error">Error</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="startDateFilter" class="form-label">Date de Début</label>
+                    <input type="datetime-local" class="form-control" id="startDateFilter" name="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDateFilter" class="form-label">Date de Fin</label>
+                    <input type="datetime-local" class="form-control" id="endDateFilter" name="endDate">
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <button type="submit" class="btn btn-primary">Filtrer</button>
+                </div>
+            </form>
+
+            <!-- Log Table -->
+            <table class="table table-striped table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Niveau</th>
+                        <th>Message</th>
+                        <th>Exception</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                    <!-- Log entries will be loaded here dynamically -->
+                    <tr><td colspan="4" class="text-center">Chargement des logs...</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <nav aria-label="Log pagination">
+                <ul class="pagination justify-content-center" id="logPagination">
+                    <!-- Pagination items will be added here -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Placeholder for JavaScript to fetch and display logs
+        $(document).ready(function () {
+            function loadLogs(page = 1) {
+                const level = $('#logLevelFilter').val();
+                const startDate = $('#startDateFilter').val();
+                const endDate = $('#endDateFilter').val();
+                const pageSize = 20; // Or get from a dropdown
+
+                // Replace with actual API endpoint
+                const apiUrl = `/api/logs?page=${page}&pageSize=${pageSize}&level=${level}&startDate=${startDate}&endDate=${endDate}`;
+
+                $('#logTableBody').html('<tr><td colspan="4" class="text-center">Chargement des logs...</td></tr>');
+
+                $.get(apiUrl, function (data) {
+                    $('#logTableBody').empty();
+                    if (data && data.logs && data.logs.length > 0) {
+                        data.logs.forEach(log => {
+                            const row = `<tr>
+                                <td>${new Date(log.timestamp).toLocaleString()}</td>
+                                <td><span class="badge bg-${getLogLevelClass(log.level)}">${log.level}</span></td>
+                                <td>${log.message}</td>
+                                <td>${log.exception || '-'}</td>
+                            </tr>`;
+                            $('#logTableBody').append(row);
+                        });
+                        renderPagination(data.currentPage, data.totalPages);
+                    } else {
+                        $('#logTableBody').html('<tr><td colspan="4" class="text-center">Aucun log trouvé.</td></tr>');
+                        $('#logPagination').empty();
+                    }
+                }).fail(function() {
+                     $('#logTableBody').html('<tr><td colspan="4" class="text-center text-danger">Erreur lors du chargement des logs.</td></tr>');
+                     $('#logPagination').empty();
+                });
+            }
+
+            function getLogLevelClass(level) {
+                switch (level.toLowerCase()) {
+                    case 'information': return 'info';
+                    case 'warning': return 'warning';
+                    case 'error': return 'danger';
+                    case 'critical': return 'danger fw-bold';
+                    default: return 'secondary';
+                }
+            }
+
+            function renderPagination(currentPage, totalPages) {
+                $('#logPagination').empty();
+                if (totalPages <= 1) return;
+
+                const createPageItem = (page, text, isActive = false, isDisabled = false) => {
+                    const liClass = `page-item ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`;
+                    const linkClass = 'page-link';
+                    return `<li class="${liClass}"><a class="${linkClass}" href="#" data-page="${page}">${text}</a></li>`;
+                };
+
+                // Previous button
+                $('#logPagination').append(createPageItem(currentPage - 1, 'Précédent', false, currentPage === 1));
+
+                // Page numbers (simplified for brevity)
+                for (let i = 1; i <= totalPages; i++) {
+                     if (i === currentPage || (i >= currentPage - 2 && i <= currentPage + 2) || i === 1 || i === totalPages) {
+                         $('#logPagination').append(createPageItem(i, i, i === currentPage));
+                     } else if (i === currentPage - 3 || i === currentPage + 3) {
+                          $('#logPagination').append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+                     }
+                }
+
+                // Next button
+                $('#logPagination').append(createPageItem(currentPage + 1, 'Suivant', false, currentPage === totalPages));
+
+                // Add click handler for pagination links
+                $('#logPagination a').click(function (e) {
+                    e.preventDefault();
+                    const page = $(this).data('page');
+                    if (page) {
+                        loadLogs(page);
+                    }
+                });
+            }
+
+            // Initial load
+            loadLogs();
+
+            // Filter form submission
+            $('#logFilterForm').submit(function (e) {
+                e.preventDefault();
+                loadLogs();
+            });
+        });
+    </script>
+}

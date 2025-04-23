@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Binance Trading Bot</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Trading Bot</h3>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a asp-controller="Home" asp-action="Index" class="sidebar-link">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="Positions" asp-action="Index" class="sidebar-link">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Positions</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="TradingPairs" asp-action="Index" class="sidebar-link">
+                        <i class="bi bi-currency-exchange"></i>
+                        <span>Paires de Trading</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="Strategies" asp-action="Index" class="sidebar-link">
+                        <i class="bi bi-gear"></i>
+                        <span>Stratégies</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="Settings" asp-action="Index" class="sidebar-link">
+                        <i class="bi bi-sliders"></i>
+                        <span>Paramètres</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="Analytics" asp-action="Index" class="sidebar-link">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Analytiques</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a asp-controller="Logs" asp-action="Index" class="sidebar-link">
+                        <i class="bi bi-file-text"></i>
+                        <span>Logs</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div id="botStatus" class="bot-status">
+                    <span class="status-indicator running"></span>
+                    <span class="status-text">Bot actif</span>
+                </div>
+                <div class="user-info">
+                    <i class="bi bi-person-circle"></i>
+                    <span id="username">Admin</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button class="navbar-toggler" type="button" id="sidebar-toggle">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="navbar-brand">@ViewData["Title"]</div>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell"></i>
+                                    <span class="badge bg-danger">3</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" href="#">Notification 1</a></li>
+                                    <li><a class="dropdown-item" href="#">Notification 2</a></li>
+                                    <li><a class="dropdown-item" href="#">Notification 3</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" href="#" id="profile-link">Profil</a></li>
+                                    <li><a class="dropdown-item" href="#" id="logout-link">Déconnexion</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - Binance Trading Bot - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Connexion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="alert alert-danger d-none" id="loginError"></div>
+                        <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script src="~/lib/chart.js/dist/chart.umd.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

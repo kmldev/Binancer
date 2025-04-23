@@ -1,0 +1,566 @@
+@model IEnumerable<PositionDTO>
+@{
+    ViewData["Title"] = "Positions";
+}
+
+<div class="positions-page">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Positions</h5>
+                    <div class="card-tools">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-filter active" data-filter="all">Toutes</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-filter" data-filter="open">Ouvertes</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-filter" data-filter="closed">Fermées</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="positions-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Symbole</th>
+                                    <th>Type</th>
+                                    <th>Prix d'entrée</th>
+                                    <th>Prix de sortie</th>
+                                    <th>Quantité</th>
+                                    <th>Stop Loss</th>
+                                    <th>Take Profit</th>
+                                    <th>Date d'ouverture</th>
+                                    <th>Date de fermeture</th>
+                                    <th>Profit</th>
+                                    <th>Stratégie</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var position in Model)
+                                {
+                                    <tr class="position-row @(position.Status == BinanceTradingBot.Domain.Enums.PositionStatus.Open ? "active-position" : "")">
+                                        <td>@position.Id</td>
+                                        <td>@position.Symbol</td>
+                                        <td>
+                                            @if (position.Type == BinanceTradingBot.Domain.Enums.PositionType.Long)
+                                            {
+                                                <span class="badge bg-success">Long</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Short</span>
+                                            }
+                                        </td>
+                                        <td>@position.EntryPrice.ToString("N2")</td>
+                                        <td>@(position.ExitPrice.HasValue ? position.ExitPrice.Value.ToString("N2") : "-")</td>
+                                        <td>@position.Quantity.ToString("N6")</td>
+                                        <td>@(position.StopLoss.HasValue ? position.StopLoss.Value.ToString("N2") : "-")</td>
+                                        <td>@(position.TakeProfit.HasValue ? position.TakeProfit.Value.ToString("N2") : "-")</td>
+                                        <td>@position.OpenTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        <td>@(position.CloseTime.HasValue ? position.CloseTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "-")</td>
+                                        <td class="profit-@(position.CurrentProfit >= 0 ? "positive" : "negative")">
+                                            @position.CurrentProfit.ToString("N2") (@position.CurrentProfitPercentage.ToString("N2")%)
+                                        </td>
+                                        <td>@position.Strategy</td>
+                                        <td>
+                                            @if (position.Status == BinanceTradingBot.Domain.Enums.PositionStatus.Open)
+                                            {
+                                                <span class="badge bg-primary">Ouvert</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Fermé</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary view-position" data-id="@position.Id">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                @if (position.Status == BinanceTradingBot.Domain.Enums.PositionStatus.Open)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-warning edit-position" data-id="@position.Id">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger close-position" data-id="@position.Id">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour modifier SL/TP -->
+<div class="modal fade" id="editPositionModal" tabindex="-1" aria-labelledby="editPositionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPositionModalLabel">Modifier Stop Loss / Take Profit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editPositionForm">
+                    <input type="hidden" id="position-id">
+                    <div class="mb-3">
+                        <label for="stop-loss" class="form-label">Stop Loss</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="stop-loss" step="0.01">
+                            <button class="btn btn-outline-secondary clear-field" type="button" data-target="stop-loss">Effacer</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="take-profit" class="form-label">Take Profit</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="take-profit" step="0.01">
+                            <button class="btn btn-outline-secondary clear-field" type="button" data-target="take-profit">Effacer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="save-position">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de détails de position -->
+<div class="modal fade" id="positionDetailsModal" tabindex="-1" aria-labelledby="positionDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="positionDetailsModalLabel">Détails de la Position</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informations Générales</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>ID:</th>
+                                    <td id="detail-id"></td>
+                                </tr>
+                                <tr>
+                                    <th>Symbole:</th>
+                                    <td id="detail-symbol"></td>
+                                </tr>
+                                <tr>
+                                    <th>Type:</th>
+                                    <td id="detail-type"></td>
+                                </tr>
+                                <tr>
+                                    <th>Stratégie:</th>
+                                    <td id="detail-strategy"></td>
+                                </tr>
+                                <tr>
+                                    <th>Statut:</th>
+                                    <td id="detail-status"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Détails de Trading</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>Prix d'entrée:</th>
+                                    <td id="detail-entry-price"></td>
+                                </tr>
+                                <tr>
+                                    <th>Prix de sortie:</th>
+                                    <td id="detail-exit-price"></td>
+                                </tr>
+                                <tr>
+                                    <th>Quantité:</th>
+                                    <td id="detail-quantity"></td>
+                                </tr>
+                                <tr>
+                                    <th>Stop Loss:</th>
+                                    <td id="detail-stop-loss"></td>
+                                </tr>
+                                <tr>
+                                    <th>Take Profit:</th>
+                                    <td id="detail-take-profit"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Dates</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>Date d'ouverture:</th>
+                                    <td id="detail-open-time"></td>
+                                </tr>
+                                <tr>
+                                    <th>Date de fermeture:</th>
+                                    <td id="detail-close-time"></td>
+                                </tr>
+                                <tr>
+                                    <th>Durée:</th>
+                                    <td id="detail-duration"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Résultats</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>Profit:</th>
+                                    <td id="detail-profit"></td>
+                                </tr>
+                                <tr>
+                                    <th>Profit (%):</th>
+                                    <td id="detail-profit-percentage"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h6>Graphique du Prix</h6>
+                        <canvas id="positionPriceChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" id="download-position-data">Télécharger les Données</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Filtrage des positions
+            $('.position-filter').click(function() {
+                $('.position-filter').removeClass('active');
+                $(this).addClass('active');
+
+                const filter = $(this).data('filter');
+
+                if (filter === 'all') {
+                    $('.position-row').show();
+                } else if (filter === 'open') {
+                    $('.position-row').hide();
+                    $('.position-row .badge:contains("Ouvert")').closest('tr').show();
+                } else if (filter === 'closed') {
+                    $('.position-row').hide();
+                    $('.position-row .badge:contains("Fermé")').closest('tr').show();
+                }
+            });
+
+            // Voir les détails d'une position
+            $('.view-position').click(function() {
+                const positionId = $(this).data('id');
+
+                $.ajax({
+                    url: `/api/positions/${positionId}`,
+                    type: 'GET',
+                    success: function(position) {
+                        // Remplir les détails dans la modal
+                        $('#detail-id').text(position.id);
+                        $('#detail-symbol').text(position.symbol);
+                        $('#detail-type').html(position.type === 'Long' ?
+                            '<span class="badge bg-success">Long</span>' :
+                            '<span class="badge bg-danger">Short</span>');
+                        $('#detail-strategy').text(position.strategy);
+                        $('#detail-status').html(position.status === 'Open' ?
+                            '<span class="badge bg-primary">Ouvert</span>' :
+                            '<span class="badge bg-secondary">Fermé</span>');
+
+                        $('#detail-entry-price').text(position.entryPrice.toFixed(2));
+                        $('#detail-exit-price').text(position.exitPrice ? position.exitPrice.toFixed(2) : '-');
+                        $('#detail-quantity').text(position.quantity.toFixed(6));
+                        $('#detail-stop-loss').text(position.stopLoss ? position.stopLoss.toFixed(2) : '-');
+                        $('#detail-take-profit').text(position.takeProfit ? position.takeProfit.toFixed(2) : '-');
+
+                        $('#detail-open-time').text(new Date(position.openTime).toLocaleString());
+                        $('#detail-close-time').text(position.closeTime ? new Date(position.closeTime).toLocaleString() : '-');
+
+                        // Calculer la durée
+                        if (position.closeTime) {
+                            const openTime = new Date(position.openTime);
+                            const closeTime = new Date(position.closeTime);
+                            const durationMs = closeTime - openTime;
+                            const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                            const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                            $('#detail-duration').text(`${durationHours}h ${durationMinutes}m`);
+                        } else {
+                            const openTime = new Date(position.openTime);
+                            const now = new Date();
+                            const durationMs = now - openTime;
+                            const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                            const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                            $('#detail-duration').text(`${durationHours}h ${durationMinutes}m (en cours)`);
+                        }
+
+                        // Profit info
+                        const profitClass = position.currentProfit >= 0 ? 'text-success' : 'text-danger';
+                        $('#detail-profit').html(`<span class="${profitClass}">${position.currentProfit.toFixed(2)} USDT</span>`);
+                        $('#detail-profit-percentage').html(`<span class="${profitClass}">${position.currentProfitPercentage.toFixed(2)}%</span>`);
+
+                        // Créer un graphique simple (à l'avenir, récupérer les données réelles)
+                        const ctx = document.getElementById('positionPriceChart').getContext('2d');
+
+                        // Simuler des données pour le graphique
+                        const entryTime = new Date(position.openTime);
+                        const closeTime = position.closeTime ? new Date(position.closeTime) : new Date();
+                        const totalHours = Math.ceil((closeTime - entryTime) / (1000 * 60 * 60));
+
+                        const labels = Array.from({ length: totalHours }, (_, i) => {
+                            const date = new Date(entryTime);
+                            date.setHours(date.getHours() + i);
+                            return date.toLocaleString();
+                        });
+
+                        const entryPrice = position.entryPrice;
+                        const exitPrice = position.exitPrice || position.entryPrice * (1 + position.currentProfitPercentage / 100);
+
+                        // Générer des données de prix simulées
+                        let priceData = [entryPrice];
+                        const priceDiff = exitPrice - entryPrice;
+                        const trend = priceDiff / totalHours;
+
+                        for (let i = 1; i < totalHours; i++) {
+                            const randomFactor = (Math.random() - 0.5) * 0.01 * entryPrice; // Fluctuation aléatoire
+                            const newPrice = entryPrice + (trend * i) + randomFactor;
+                            priceData.push(Math.max(0, newPrice));
+                        }
+
+                        if (position.exitPrice) {
+                            priceData[priceData.length - 1] = exitPrice; // Dernier point = prix de sortie
+                        }
+
+                        // Points pour les niveaux de SL/TP
+                        const annotations = [];
+
+                        if (position.stopLoss) {
+                            annotations.push({
+                                type: 'line',
+                                label: {
+                                    content: 'Stop Loss',
+                                    enabled: true,
+                                    position: 'start'
+                                },
+                                scaleID: 'y',
+                                value: position.stopLoss,
+                                borderColor: 'red',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            });
+                        }
+
+                        if (position.takeProfit) {
+                            annotations.push({
+                                type: 'line',
+                                label: {
+                                    content: 'Take Profit',
+                                    enabled: true,
+                                    position: 'start'
+                                },
+                                scaleID: 'y',
+                                value: position.takeProfit,
+                                borderColor: 'green',
+                                borderWidth: 1,
+                                borderDash: [5, 5]
+                            });
+                        }
+
+                        // Créer le graphique
+                        if (window.positionPriceChart) {
+                            window.positionPriceChart.destroy();
+                        }
+
+                        window.positionPriceChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: `Prix ${position.symbol}`,
+                                    data: priceData,
+                                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                    borderColor: 'rgba(0, 123, 255, 1)',
+                                    borderWidth: 2,
+                                    tension: 0.3,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    annotation: {
+                                        annotations: annotations
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        grid: {
+                                            drawBorder: false
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Afficher la modal
+                        $('#positionDetailsModal').modal('show');
+                    },
+                    error: function(xhr) {
+                        showNotification(`Erreur: ${xhr.responseJSON?.message || 'Impossible de charger les détails de la position'}`, 'danger');
+                    }
+                });
+            });
+
+            // Éditer une position (SL/TP)
+            $('.edit-position').click(function() {
+                const positionId = $(this).data('id');
+
+                $.ajax({
+                    url: `/api/positions/${positionId}`,
+                    type: 'GET',
+                    success: function(position) {
+                        $('#position-id').val(position.id);
+                        $('#stop-loss').val(position.stopLoss);
+                        $('#take-profit').val(position.takeProfit);
+
+                        $('#editPositionModal').modal('show');
+                    },
+                    error: function(xhr) {
+                        showNotification(`Erreur: ${xhr.responseJSON?.message || 'Impossible de charger les détails de la position'}`, 'danger');
+                    }
+                });
+            });
+
+            // Effacer un champ
+            $('.clear-field').click(function() {
+                const targetId = $(this).data('target');
+                $(`#${targetId}`).val('');
+            });
+
+            // Enregistrer les modifications de la position
+            $('#save-position').click(function() {
+                const positionId = $('#position-id').val();
+                const stopLoss = $('#stop-loss').val() ? parseFloat($('#stop-loss').val()) : null;
+                const takeProfit = $('#take-profit').val() ? parseFloat($('#take-profit').val()) : null;
+
+                const data = {
+                    stopLoss: stopLoss,
+                    takeProfit: takeProfit
+                };
+
+                $.ajax({
+                    url: `/api/positions/${positionId}/update-sl-tp`,
+                    type: 'PATCH',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(result) {
+                        showNotification('Position mise à jour avec succès', 'success');
+                        $('#editPositionModal').modal('hide');
+                        // Recharger la page pour afficher les nouvelles valeurs
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    },
+                    error: function(xhr) {
+                        showNotification(`Erreur: ${xhr.responseJSON?.message || 'Impossible de mettre à jour la position'}`, 'danger');
+                    }
+                });
+            });
+
+            // Fermer une position
+            $('.close-position').click(function() {
+                const positionId = $(this).data('id');
+                if (confirm('Êtes-vous sûr de vouloir fermer cette position ?')) {
+                    $.ajax({
+                        url: `/api/positions/${positionId}/close`,
+                        type: 'POST',
+                        success: function(result) {
+                            showNotification('Position fermée avec succès', 'success');
+                            // Recharger la page pour afficher la mise à jour
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        },
+                        error: function(xhr) {
+                            showNotification(`Erreur: ${xhr.responseJSON?.message || 'Impossible de fermer la position'}`, 'danger');
+                        }
+                    });
+                }
+            });
+
+            // Télécharger les données d'une position
+            $('#download-position-data').click(function() {
+                const positionId = $('#detail-id').text();
+                const symbol = $('#detail-symbol').text();
+
+                // Créer un objet avec toutes les données de la position
+                const positionData = {
+                    id: positionId,
+                    symbol: symbol,
+                    type: $('#detail-type').text().trim(),
+                    strategy: $('#detail-strategy').text(),
+                    status: $('#detail-status').text().trim(),
+                    entryPrice: $('#detail-entry-price').text(),
+                    exitPrice: $('#detail-exit-price').text(),
+                    quantity: $('#detail-quantity').text(),
+                    stopLoss: $('#detail-stop-loss').text(),
+                    takeProfit: $('#detail-take-profit').text(),
+                    openTime: $('#detail-open-time').text(),
+                    closeTime: $('#detail-close-time').text(),
+                    duration: $('#detail-duration').text(),
+                    profit: $('#detail-profit').text().trim(),
+                    profitPercentage: $('#detail-profit-percentage').text().trim()
+                };
+
+                // Convertir en JSON
+                const jsonData = JSON.stringify(positionData, null, 2);
+
+                // Créer un blob et un lien de téléchargement
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `position_${symbol}_${positionId}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+}

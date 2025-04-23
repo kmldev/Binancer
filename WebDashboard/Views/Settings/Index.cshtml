@@ -1,0 +1,552 @@
+@model AppSettingsDTO
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="settings-page">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
+                        <i class="bi bi-gear"></i> General
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk" type="button" role="tab" aria-controls="risk" aria-selected="false">
+                        <i class="bi bi-shield-exclamation"></i> Risk Management
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api" type="button" role="tab" aria-controls="api" aria-selected="false">
+                        <i class="bi bi-key"></i> API Information
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab" aria-controls="notifications" aria-selected="false">
+                        <i class="bi bi-bell"></i> Notifications
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="tab-content" id="settingsTabContent">
+        <!-- General Settings -->
+        <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">General Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="general-settings-form">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="use-testnet" checked="@Model.UseTestnet">
+                                            <label class="form-check-label" for="use-testnet">Use Testnet</label>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="default-strategy" class="form-label">Default Strategy</label>
+                                            <select class="form-select" id="default-strategy">
+                                                <option value="TripleConfirmation" selected="@(Model.DefaultStrategy == "TripleConfirmation")">Triple Confirmation</option>
+                                                <option value="SupportResistance" selected="@(Model.DefaultStrategy == "SupportResistance")">Support Resistance</option>
+                                                <option value="TrendFollowing" selected="@(Model.DefaultStrategy == "TrendFollowing")">Trend Following</option>
+                                                <option value="MACrossover" selected="@(Model.DefaultStrategy == "MACrossover")">MA Crossover</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="refresh-interval" class="form-label">Refresh Interval (seconds)</label>
+                                            <input type="number" class="form-control" id="refresh-interval" min="10" max="3600" value="@Model.RefreshInterval">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="min-confidence-threshold" class="form-label">Minimum Confidence Threshold</label>
+                                            <input type="number" class="form-control" id="min-confidence-threshold" min="0.1" max="1" step="0.1" value="@Model.MinConfidenceThreshold">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="risk-per-trade" class="form-label">Risk Per Trade (%)</label>
+                                            <input type="number" class="form-control" id="risk-per-trade" min="0.1" max="50" step="0.1" value="@(Model.RiskPerTradePercentage * 100)">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="min-order-amount" class="form-label">Minimum Order Amount (USDT)</label>
+                                            <input type="number" class="form-control" id="min-order-amount" min="1" value="@Model.MinOrderAmount">
+                                        </div>
+
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="allow-multiple-positions" checked="@Model.AllowMultiplePositions">
+                                            <label class="form-check-label" for="allow-multiple-positions">Allow Multiple Positions</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <h6>Stop Loss / Take Profit Settings</h6>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="use-stop-loss" checked="@Model.UseStopLoss">
+                                            <label class="form-check-label" for="use-stop-loss">Use Stop Loss</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="use-take-profit" checked="@Model.UseTakeProfit">
+                                            <label class="form-check-label" for="use-take-profit">Use Take Profit</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="use-dynamic-stop-loss" checked="@Model.UseDynamicStopLoss">
+                                            <label class="form-check-label" for="use-dynamic-stop-loss">Dynamic Stop Loss</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="stop-loss-percentage" class="form-label">Stop Loss Percentage (%)</label>
+                                            <input type="number" class="form-control" id="stop-loss-percentage" min="0.1" max="50" step="0.1" value="@(Model.StopLossPercentage * 100)">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="take-profit-percentage" class="form-label">Take Profit Percentage (%)</label>
+                                            <input type="number" class="form-control" id="take-profit-percentage" min="0.1" max="100" step="0.1" value="@(Model.TakeProfitPercentage * 100)">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <h6>Trading Hours</h6>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="restrict-trading-hours" checked="@Model.RestrictTradingHours">
+                                            <label class="form-check-label" for="restrict-trading-hours">Restrict Trading Hours</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="trading-hours-start" class="form-label">Start Time</label>
+                                            <input type="time" class="form-control" id="trading-hours-start" value="@Model.TradingHoursStart">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="trading-hours-end" class="form-label">End Time</label>
+                                            <input type="time" class="form-control" id="trading-hours-end" value="@Model.TradingHoursEnd">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Management -->
+        <div class="tab-pane fade" id="risk" role="tabpanel" aria-labelledby="risk-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Risk Management Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="risk-management-form">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="max-portfolio-exposure" class="form-label">Max Portfolio Exposure</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="max-portfolio-exposure" min="0" max="1" step="0.01" value="0.8">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                            <small class="form-text text-muted">Maximum percentage of the portfolio the bot can use for trading.</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="critical-exposure-threshold" class="form-label">Critical Exposure Threshold</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="critical-exposure-threshold" min="0" max="1" step="0.01" value="0.9">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                            <small class="form-text text-muted">Percentage of exposure beyond which emergency actions may be triggered.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="max-position-size" class="form-label">Max Position Size (USDT)</label>
+                                            <input type="number" class="form-control" id="max-position-size" min="1" value="1000">
+                                            <small class="form-text text-muted">The maximum value in USDT for a single position.</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="max-allowed-volatility" class="form-label">Max Allowed Volatility (%)</label>
+                                            <input type="number" class="form-control" id="max-allowed-volatility" min="0" step="0.1" value="5">
+                                            <small class="form-text text-muted">Do not open positions on pairs whose 24h volatility exceeds this percentage.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="emergency-exit-threshold" class="form-label">Emergency Exit Threshold (%)</label>
+                                            <input type="number" class="form-control" id="emergency-exit-threshold" min="-100" max="0" step="0.1" value="-10">
+                                            <small class="form-text text-muted">Close all positions if the total portfolio loss reaches this percentage.</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="max-position-days" class="form-label">Max Position Days</label>
+                                            <input type="number" class="form-control" id="max-position-days" min="1" value="7">
+                                            <small class="form-text text-muted">Automatically close open positions after this number of days.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="max-daily-loss" class="form-label">Max Daily Loss (USDT)</label>
+                                            <input type="number" class="form-control" id="max-daily-loss" min="0" step="0.01" value="50">
+                                            <small class="form-text text-muted">Stop trading for the day if the total loss reaches this amount.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Information -->
+        <div class="tab-pane fade" id="api" role="tabpanel" aria-labelledby="api-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">API Credentials</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="api-credentials-form">
+                                <div class="mb-3">
+                                    <label for="api-key" class="form-label">API Key</label>
+                                    <input type="text" class="form-control" id="api-key" value="">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="api-secret" class="form-label">API Secret</label>
+                                    <input type="password" class="form-control" id="api-secret" value="">
+                                </div>
+                                <div class="mb-3 form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="api-use-testnet" checked="">
+                                    <label class="form-check-label" for="api-use-testnet">Use Testnet for API</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Credentials</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Notification Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="notification-settings-form">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6>Email Notifications</h6>
+                                        <div class="mb-3 form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enable-email-notifications" checked="">
+                                            <label class="form-check-label" for="enable-email-notifications">Enable Email Notifications</label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email-api-key" class="form-label">Email API Key</label>
+                                            <input type="text" class="form-control" id="email-api-key" value="">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email-sender" class="form-label">Sender Address</label>
+                                            <input type="email" class="form-control" id="email-sender" value="">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email-recipient" class="form-label">Recipient Address</label>
+                                            <input type="email" class="form-control" id="email-recipient" value="">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <h6>Telegram Notifications</h6>
+                                        <div class="mb-3 form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enable-telegram-notifications" checked="">
+                                            <label class="form-check-label" for="enable-telegram-notifications">Enable Telegram Notifications</label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="telegram-bot-token" class="form-label">Telegram Bot Token</label>
+                                            <input type="text" class="form-control" id="telegram-bot-token" value="">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="telegram-chat-id" class="form-label">Telegram Chat ID</label>
+                                            <input type="text" class="form-control" id="telegram-chat-id" value="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Notification Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Activate Bootstrap tabs
+            var triggerTabList = [].slice.call(document.querySelectorAll('#settingsTabs button'))
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl)
+
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault()
+                    tabTrigger.show()
+                })
+            })
+
+            // Load settings on page load
+            loadSettings();
+
+            // Handle form submissions
+            $('#general-settings-form').submit(function(e) {
+                e.preventDefault();
+                saveGeneralSettings();
+            });
+
+            $('#risk-management-form').submit(function(e) {
+                e.preventDefault();
+                saveRiskManagementSettings();
+            });
+
+            $('#api-credentials-form').submit(function(e) {
+                e.preventDefault();
+                saveApiCredentials();
+            });
+
+            $('#notification-settings-form').submit(function(e) {
+                e.preventDefault();
+                saveNotificationSettings();
+            });
+        });
+
+        // Fonctions pour charger et enregistrer les paramètres (implémentées dans site.js)
+        function loadSettings() {
+            console.log("Loading settings...");
+            // AJAX call to load settings
+            $.ajax({
+                url: '/api/settings',
+                type: 'GET',
+                success: function(settings) {
+                    // Fill form fields with loaded data
+                    $('#use-testnet').prop('checked', settings.useTestnet);
+                    $('#default-strategy').val(settings.defaultStrategy);
+                    $('#refresh-interval').val(settings.refreshInterval);
+                    $('#min-confidence-threshold').val(settings.minConfidenceThreshold);
+                    $('#risk-per-trade').val(settings.riskPerTradePercentage * 100); // Convert to percentage
+                    $('#min-order-amount').val(settings.minOrderAmount);
+                    $('#allow-multiple-positions').prop('checked', settings.allowMultiplePositions);
+                    $('#use-stop-loss').prop('checked', settings.useStopLoss);
+                    $('#use-take-profit').prop('checked', settings.useTakeProfit);
+                    $('#use-dynamic-stop-loss').prop('checked', settings.useDynamicStopLoss);
+                    $('#stop-loss-percentage').val(settings.stopLossPercentage * 100); // Convert to percentage
+                    $('#take-profit-percentage').val(settings.takeProfitPercentage * 100); // Convert to percentage
+                    $('#restrict-trading-hours').prop('checked', settings.restrictTradingHours);
+                    $('#trading-hours-start').val(settings.tradingHoursStart);
+                    $('#trading-hours-end').val(settings.tradingHoursEnd);
+
+                    // Fill fields in other sections (Risk, API, Notifications) if data is included in the same API call
+                    // Otherwise, make separate API calls here or in dedicated functions
+                    $('#max-portfolio-exposure').val(settings.maxPortfolioExposure);
+                    $('#critical-exposure-threshold').val(settings.criticalExposureThreshold);
+                    $('#max-position-size').val(settings.maxPositionSize);
+                    $('#max-allowed-volatility').val(settings.maxAllowedVolatility);
+                    $('#emergency-exit-threshold').val(settings.emergencyExitThreshold);
+                    $('#max-position-days').val(settings.maxPositionDays);
+                    $('#max-daily-loss').val(settings.maxDailyLoss);
+
+                    $('#api-key').val(settings.apiKey); // Warning: do not display API secret
+                    $('#api-use-testnet').prop('checked', settings.apiUseTestnet);
+
+                    $('#enable-email-notifications').prop('checked', settings.enableEmailNotifications);
+                    $('#email-api-key').val(settings.emailApiKey);
+                    $('#email-sender').val(settings.emailSender);
+                    $('#email-recipient').val(settings.emailRecipient);
+                    $('#enable-telegram-notifications').prop('checked', settings.enableTelegramNotifications);
+                    $('#telegram-bot-token').val(settings.telegramBotToken);
+                    $('#telegram-chat-id').val(settings.telegramChatId);
+
+                    console.log("Settings loaded successfully.");
+                },
+                error: function(xhr) {
+                    showNotification(`Error loading settings: ${xhr.responseJSON?.message || xhr.responseText}`, 'danger');
+                    console.error("Error loading settings:", xhr);
+                }
+            });
+        }
+
+        function saveGeneralSettings() {
+            console.log("Saving general settings...");
+            const formData = {
+                useTestnet: $('#use-testnet').prop('checked'),
+                defaultStrategy: $('#default-strategy').val(),
+                refreshInterval: parseInt($('#refresh-interval').val(), 10),
+                minConfidenceThreshold: parseFloat($('#min-confidence-threshold').val()),
+                riskPerTradePercentage: parseFloat($('#risk-per-trade').val()) / 100, // Convert to decimal
+                minOrderAmount: parseFloat($('#min-order-amount').val()),
+                allowMultiplePositions: $('#allow-multiple-positions').prop('checked'),
+                useStopLoss: $('#use-stop-loss').prop('checked'),
+                useTakeProfit: $('#use-take-profit').prop('checked'),
+                useDynamicStopLoss: $('#use-dynamic-stop-loss').prop('checked'),
+                stopLossPercentage: parseFloat($('#stop-loss-percentage').val()) / 100, // Convert to decimal
+                takeProfitPercentage: parseFloat($('#take-profit-percentage').val()) / 100, // Convert to decimal
+                restrictTradingHours: $('#restrict-trading-hours').prop('checked'),
+                tradingHoursStart: $('#trading-hours-start').val(),
+                tradingHoursEnd: $('#trading-hours-end').val()
+            };
+
+            $.ajax({
+                url: '/api/settings/general', // Ensure this endpoint exists
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function() {
+                    showNotification('General settings updated successfully', 'success');
+                    console.log("General settings saved successfully.");
+                },
+                error: function(xhr) {
+                    showNotification(`Error saving general settings: ${xhr.responseJSON?.message || xhr.responseText}`, 'danger');
+                    console.error("Error saving general settings:", xhr);
+                }
+            });
+        }
+
+        function saveRiskManagementSettings() {
+            console.log("Saving risk management settings...");
+            const formData = {
+                maxPortfolioExposure: parseFloat($('#max-portfolio-exposure').val()),
+                criticalExposureThreshold: parseFloat($('#critical-exposure-threshold').val()),
+                maxPositionSize: parseFloat($('#max-position-size').val()),
+                maxAllowedVolatility: parseFloat($('#max-allowed-volatility').val()),
+                emergencyExitThreshold: parseFloat($('#emergency-exit-threshold').val()),
+                maxPositionDays: parseInt($('#max-position-days').val(), 10),
+                maxDailyLoss: parseFloat($('#max-daily-loss').val())
+            };
+
+            $.ajax({
+                url: '/api/settings/risk-management', // Ensure this endpoint exists
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function() {
+                    showNotification('Risk management settings updated successfully', 'success');
+                    console.log("Risk management settings saved successfully.");
+                },
+                error: function(xhr) {
+                    showNotification(`Error saving risk management settings: ${xhr.responseJSON?.message || xhr.responseText}`, 'danger');
+                    console.error("Error saving risk management settings:", xhr);
+                }
+            });
+        }
+
+        function saveApiCredentials() {
+           console.log("Saving API credentials...");
+           const formData = {
+               apiKey: $('#api-key').val(),
+               apiSecret: $('#api-secret').val(),
+               useTestnet: $('#api-use-testnet').prop('checked')
+           };
+
+           $.ajax({
+               url: '/api/settings/api-credentials', // Ensure this endpoint exists
+               type: 'PUT',
+               contentType: 'application/json',
+               data: JSON.stringify(formData),
+               success: function() {
+                   showNotification('API credentials updated successfully', 'success');
+                   console.log("API credentials saved successfully.");
+               },
+               error: function(xhr) {
+                   showNotification(`Error saving API credentials: ${xhr.responseJSON?.message || xhr.responseText}`, 'danger');
+                   console.error("Error saving API credentials:", xhr);
+               }
+           });
+       }
+
+       function saveNotificationSettings() {
+           console.log("Saving notification settings...");
+           const formData = {
+               enableEmailNotifications: $('#enable-email-notifications').prop('checked'),
+               emailApiKey: $('#email-api-key').val(),
+               emailSender: $('#email-sender').val(),
+               emailRecipient: $('#email-recipient').val(),
+               enableTelegramNotifications: $('#enable-telegram-notifications').prop('checked'),
+               telegramBotToken: $('#telegram-bot-token').val(),
+               telegramChatId: $('#telegram-chat-id').val()
+           };
+
+           $.ajax({
+               url: '/api/settings/notifications', // Ensure this endpoint exists
+               type: 'PUT',
+               contentType: 'application/json',
+               data: JSON.stringify(formData),
+               success: function() {
+                   showNotification('Notification settings updated successfully', 'success');
+                   console.log("Notification settings saved successfully.");
+               },
+               error: function(xhr) {
+                   showNotification(`Error saving notification settings: ${xhr.responseJSON?.message || xhr.responseText}`, 'danger');
+                   console.error("Error saving notification settings:", xhr);
+               }
+           });
+       }
+   </script>
+}

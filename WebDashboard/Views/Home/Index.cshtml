@@ -1,0 +1,412 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard">
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Profit 💰</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-primary">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6 class="mb-0 profit-@(Model.TotalProfit >= 0 ? "positive" : "negative")">@Model.TotalProfit.ToString("N2") USDT</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Daily Profit 📈</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-success">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6 class="mb-0 profit-@(Model.DailyProfit >= 0 ? "positive" : "negative")">@Model.DailyProfit.ToString("N2") USDT</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Open Positions 📋</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-info">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6 class="mb-0">@Model.OpenPositions</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Win Rate 🏆</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-warning">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6 class="mb-0">@((Model.WinRate * 100).ToString("N2"))%</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Chart and Recent Positions -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Performance 📊</h5>
+                    <div class="card-tools">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary time-period active" data-period="day">Day</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary time-period" data-period="week">Week</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary time-period" data-period="month">Month</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary time-period" data-period="year">Year</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Statistics 📈</h5>
+                </div>
+                <div class="card-body">
+                    <div class="stat-item d-flex justify-content-between">
+                        <span>Winning Trades:</span>
+                        <span>@Model.WinningTrades</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between">
+                        <span>Losing Trades:</span>
+                        <span>@Model.LosingTrades</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between">
+                        <span>Average Profit:</span>
+                        <span>@Model.AverageProfit.ToString("N2") USDT</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between">
+                        <span>Average Loss:</span>
+                        <span>@Model.AverageLoss.ToString("N2") USDT</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between">
+                        <span>Profit Factor:</span>
+                        <span>@Model.ProfitFactor.ToString("N2")</span>
+                    </div>
+                    <div class="stat-item d-flex justify-content-between">
+                        <span>Max Drawdown:</span>
+                        <span>@Model.MaxDrawdown.ToString("N2") USDT</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Positions and Pair Prices -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Positions 📋</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Type</th>
+                                    <th>Entry Price</th>
+                                    <th>Exit Price</th>
+                                    <th>Quantity</th>
+                                    <th>Profit</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var position in Model.RecentPositions)
+                                {
+                                    <tr class="position-row @(position.Status == BinanceTradingBot.Domain.Enums.PositionStatus.Open ? "active-position" : "")">
+                                        <td>@position.Symbol</td>
+                                        <td>
+                                            @if (position.Type == BinanceTradingBot.Domain.Enums.PositionType.Long)
+                                            {
+                                                <span class="badge bg-success">Long</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Short</span>
+                                            }
+                                        </td>
+                                        <td>@position.EntryPrice.ToString("N2")</td>
+                                        <td>@(position.ExitPrice.HasValue ? position.ExitPrice.Value.ToString("N2") : "-")</td>
+                                        <td>@position.Quantity.ToString("N6")</td>
+                                        <td class="profit-@(position.CurrentProfit >= 0 ? "positive" : "negative")">
+                                            @position.CurrentProfit.ToString("N2") (@position.CurrentProfitPercentage.ToString("N2")%)
+                                        </td>
+                                        <td>
+                                            @if (position.Status == BinanceTradingBot.Domain.Enums.PositionStatus.Open)
+                                            {
+                                                <span class="badge bg-primary">Open</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Closed</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary view-position" data-id="@position.Id">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                @if (position.Status == BinanceTradingBot.Domain.Enums.PositionStatus.Open)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-danger close-position" data-id="@position.Id">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <a asp-controller="Positions" asp-action="Index" class="btn btn-primary btn-sm">View all positions</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Current Prices 💲</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Price</th>
+                                    <th>24h Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var price in Model.CurrentPrices)
+                                {
+                                    <tr class="price-row" data-symbol="@price.Key">
+                                        <td>@price.Key</td>
+                                        <td class="current-price">@price.Value.ToString("N2")</td>
+                                        <td class="price-change">
+                                            <span class="badge bg-success">+2.5%</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Balances 💼</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Asset</th>
+                                    <th>Balance</th>
+                                    <th>Value (USDT)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var balance in Model.AssetBalances)
+                                {
+                                    var valueInUsdt = balance.Key == "USDT" ?
+                                        balance.Value :
+                                        Model.CurrentPrices.TryGetValue($"{balance.Key}USDT", out var price) ?
+                                            balance.Value * price :
+                                            0;
+
+                                    <tr>
+                                        <td>@balance.Key</td>
+                                        <td>@balance.Value.ToString("N6")</td>
+                                        <td>@valueInUsdt.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize performance chart
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+
+            // Simulated data for the chart
+            const labels = Array.from({ length: 30 }, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - 30 + i);
+                return date.toLocaleDateString();
+            });
+
+            const profitData = [0];
+            for (let i = 1; i < 30; i++) {
+                const lastValue = profitData[i - 1];
+                const change = (Math.random() - 0.4) * 10; // Slightly positive trend
+                profitData.push(lastValue + change);
+            }
+
+            const performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Profit (USDT)',
+                        data: profitData,
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderColor: 'rgba(0, 123, 255, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Handling periods
+            $('.time-period').click(function() {
+                $('.time-period').removeClass('active');
+                $(this).addClass('active');
+
+                const period = $(this).data('period');
+                // Update chart data based on period
+                // To be implemented with real data
+            });
+
+            // Handling actions for positions
+            $('.view-position').click(function() {
+                const positionId = $(this).data('id');
+                window.location.href = `/Positions/Details/${positionId}`;
+            });
+
+            $('.close-position').click(function() {
+                const positionId = $(this).data('id');
+                if (confirm('Are you sure you want to close this position?')) {
+                    // API call to close the position
+                    $.ajax({
+                        url: `/api/positions/${positionId}/close`,
+                        type: 'POST',
+                        success: function(result) {
+                            alert('Position closed successfully');
+                            location.reload();
+                        },
+                        error: function(error) {
+                            alert('Error closing position: ' + error.responseText);
+                        }
+                    });
+                }
+            });
+
+            // SignalR connection for real-time updates
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/tradingHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("PriceUpdate", (symbol, price) => {
+                $(`.price-row[data-symbol="${symbol}"] .current-price`).text(price.toFixed(2));
+                // Add animation to indicate change
+                $(`.price-row[data-symbol="${symbol}"]`).addClass('highlight');
+                setTimeout(() => {
+                    $(`.price-row[data-symbol="${symbol}"]`).removeClass('highlight');
+                }, 1000);
+            });
+
+            connection.on("PositionUpdate", (position) => {
+                // Real-time position updates
+                    // To be implemented
+            });
+
+            connection.on("BotStatusUpdate", (isRunning) => {
+                // Bot status update
+                if (isRunning) {
+                    $('#botStatus .status-indicator').removeClass('stopped').addClass('running');
+                    $('#botStatus .status-text').text('Bot active');
+                } else {
+                    $('#botStatus .status-indicator').removeClass('running').addClass('stopped');
+                    $('#botStatus .status-text').text('Bot stopped');
+                }
+            });
+
+            // Start connection
+            connection.start()
+                .then(() => {
+                    console.log("SignalR connected");
+                    // Join trading pair groups
+                    @foreach (var price in Model.CurrentPrices)
+                    {
+                        <text>connection.invoke("JoinSymbolGroup", "@price.Key");</text>
+                    }
+                })
+                .catch(err => console.error("SignalR connection error:", err));
+        });
+    </script>
+}

@@ -1,0 +1,212 @@
+@model BinanceTradingBot.WebDashboard.Models.PerformanceStatsViewModel
+@{
+    ViewData["Title"] = "Analytiques";
+}
+
+<div class="container-fluid mt-4">
+    <h1>@ViewData["Title"]</h1>
+
+    <!-- Filter Options -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Filtres
+        </div>
+        <div class="card-body">
+            <form id="analyticsFilterForm" class="row g-3">
+                <div class="col-md-4">
+                    <label for="symbolFilter" class="form-label">Symbole</label>
+                    <select id="symbolFilter" name="symbol" class="form-select">
+                        <option value="">Tous les symboles</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="startDateFilter" class="form-label">Date de Début</label>
+                    <input type="date" class="form-control" id="startDateFilter" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-4">
+                    <label for="endDateFilter" class="form-label">Date de Fin</label>
+                    <input type="date" class="form-control" id="endDateFilter" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Appliquer les Filtres</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Profit Total</h5>
+                    <p class="card-text fs-4">@Model.TotalProfit.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Taux de Gain</h5>
+                    <p class="card-text fs-4">@Model.WinRate.ToString("P1")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Drawdown Max</h5>
+                    <p class="card-text fs-4">@Model.MaxDrawdown.ToString("C") (@Model.MaxDrawdownPercentage.ToString("P1"))</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Ratio de Sharpe</h5>
+                    <p class="card-text fs-4">@Model.SharpeRatio.ToString("N2")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Courbe d'Équité
+                </div>
+                <div class="card-body">
+                    <canvas id="analyticsEquityCurveChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Positions par Stratégie
+                </div>
+                <div class="card-body">
+                    <canvas id="positionsByStrategyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Positions Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    Détails des Positions
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Symbole</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                                <th>Prix Entrée</th>
+                                <th>Prix Sortie</th>
+                                <th>Quantité</th>
+                                <th>Profit</th>
+                                <th>Stratégie</th>
+                                <th>Ouvert le</th>
+                                <th>Fermé le</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var position in Model.Positions)
+                            {
+                                <tr>
+                                    <td>@position.Symbol</td>
+                                    <td><span class="badge bg-@(position.Type == BinanceTradingBot.Domain.Enums.PositionType.Long ? "success" : "danger")">@position.Type</span></td>
+                                    <td><span class="badge bg-@(position.Status == BinanceTradingBot.Domain.Enums.PositionStatus.Open ? "primary" : "secondary")">@position.Status</span></td>
+                                    <td>@position.EntryPrice.ToString("N4")</td>
+                                    <td>@(position.ExitPrice?.ToString("N4") ?? "-")</td>
+                                    <td>@position.Quantity.ToString("N4")</td>
+                                    <td class="@(position.Profit.HasValue ? (position.Profit.Value >= 0 ? "text-success" : "text-danger") : "")">
+                                        @(position.Profit?.ToString("C") ?? "-")
+                                    </td>
+                                    <td>@position.Strategy</td>
+                                    <td>@position.OpenTime.ToString("g")</td>
+                                    <td>@(position.CloseTime?.ToString("g") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Placeholder for JavaScript to handle filter form submission and chart rendering
+        document.addEventListener('DOMContentLoaded', function () {
+            // Populate symbol filter dropdown (example)
+            const symbolFilter = document.getElementById('symbolFilter');
+            const symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]; // Replace with actual symbols from backend
+            symbols.forEach(symbol => {
+                const option = document.createElement('option');
+                option.value = symbol;
+                option.textContent = symbol;
+                symbolFilter.appendChild(option);
+            });
+
+            // Handle filter form submission
+            $('#analyticsFilterForm').submit(function (e) {
+                e.preventDefault();
+                // Implement AJAX call to fetch filtered performance data
+                alert('Appliquer les filtres');
+            });
+
+            // Example Chart.js initialization (replace with actual data from Model)
+            const equityCtx = document.getElementById('analyticsEquityCurveChart').getContext('2d');
+            new Chart(equityCtx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(JsonSerializer.Serialize(Model.EquityCurve.Select(ec => ec.Key.ToString("d")).ToList())),
+                    datasets: [{
+                        label: 'Équité Cumulative',
+                        data: @Html.Raw(JsonSerializer.Serialize(Model.EquityCurve.Select(ec => ec.Value).ToList())),
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            const strategyCtx = document.getElementById('positionsByStrategyChart').getContext('2d');
+            new Chart(strategyCtx, {
+                type: 'pie',
+                data: {
+                    labels: @Html.Raw(JsonSerializer.Serialize(Model.PositionsByStrategy.Select(ps => ps.Key).ToList())),
+                    datasets: [{
+                        label: 'Positions par Stratégie',
+                        data: @Html.Raw(JsonSerializer.Serialize(Model.PositionsByStrategy.Select(ps => ps.Value).ToList())),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 205, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
+    </script>
+}
