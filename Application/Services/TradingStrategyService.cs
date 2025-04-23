@@ -24,6 +24,8 @@ namespace BinanceTradingBot.Application.Services
         private StrategyParameters _parameters;
         private const string DefaultStrategyName = "TripleConfirmation";
 
+        public StrategyParameters Properties => _parameters; // Add this property
+
         public TradingStrategyService(
             IExchangeService exchangeService,
             IMarketDataRepository marketDataRepository,

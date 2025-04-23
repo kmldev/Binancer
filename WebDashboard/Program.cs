@@ -11,6 +11,8 @@ using Serilog;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
+using BinanceTradingBot.Application.Extensions; // Add this using statement
+using BinanceTradingBot.WebDashboard.Extensions; // Add this using statement
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,49 +27,12 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Ajout des services au conteneur
-builder.Services.AddControllersWithViews()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.WriteIndented = true;
-    });
-
-builder.Services.AddRazorPages();
-
-// Configuration de la compression des réponses
-builder.Services.AddResponseCompression(options =>
-{
-    options.Providers.Add<BrotliCompressionProvider>();
-    options.Providers.Add<GzipCompressionProvider>();
-    options.EnableForHttps = true;
-    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        new[] { "text/css", "application/javascript", "image/svg+xml" });
-});
-
-// SignalR pour les mises à jour en temps réel
-builder.Services.AddSignalR().AddJsonProtocol(options =>
-{
-    options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-});
-
-// Configuration des CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy", policy =>
-    {
-        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "https://localhost:7001" })
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-    });
-});
-
 // Configuration de la base de données principale
 builder.Services.AddDbContext<TradingDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking); // Améliore les performances en lecture
-    
+
     // Active les logs SQL détaillés en développement
     if (builder.Environment.IsDevelopment())
     {
@@ -80,7 +45,7 @@ builder.Services.AddDbContext<TradingDbContext>(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("IdentityConnection"));
-    
+
     // Active les logs SQL détaillés en développement
     if (builder.Environment.IsDevelopment())
     {
@@ -89,74 +54,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
 });
 
-// Configuration de l'identité
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-{
-    // Configuration des règles de mot de passe
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireLowercase = true;
-    
-    // Configuration du verrouillage de compte
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-    options.Lockout.MaxFailedAccessAttempts = 5;
-    
-    // Configuration de l'utilisateur
-    options.User.RequireUniqueEmail = true;
-}).AddEntityFrameworkStores<ApplicationDbContext>()
-  .AddDefaultTokenProviders();
-
-// Configuration de l'authentification et autorisation
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ClockSkew = TimeSpan.Zero, // Réduit le délai de grâce par défaut
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOperationException("La clé secrète JWT n'est pas configurée")))
-    };
-    
-    // Permettre à SignalR de recevoir le token
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Query["access_token"];
-            var path = context.HttpContext.Request.Path;
-            
-            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/tradingHub")))
-            {
-                context.Token = accessToken;
-            }
-            
-            return Task.CompletedTask;
-        }
-    };
-});
-
-// Configuration des autorisations
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("UserAccess", policy => policy.RequireRole("User", "Admin"));
-});
-
 // Enregistrement des services applicatifs
-builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddApplicationServices(); // Corrected call
+
+// Enregistrement des services du Web Dashboard
+builder.Services.AddWebDashboardServices(builder.Configuration);
 
 // Configuration de Swagger
 builder.Services.AddSwaggerDocumentation();

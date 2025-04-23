@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using BinanceTradingBot.Application.Interfaces;
 using BinanceTradingBot.Application.Strategies;
 using BinanceTradingBot.Domain.Enums;
-using BinanceTradingBot.Domain.Models;
+using BinanceTradingBot.Domain.Entities;
 using BinanceTradingBot.Utilities;
 
 namespace BinanceTradingBot.Application.Services
@@ -34,7 +34,7 @@ namespace BinanceTradingBot.Application.Services
         /// <summary>
         /// Runs a backtest for a specific strategy on historical data
         /// </summary>
-        public async Task<StrategyPerformance> RunBacktestAsync(
+        public async Task<BinanceTradingBot.Domain.Models.StrategyPerformance> RunBacktestAsync(
             string symbol,
             string interval,
             string strategyName,
@@ -56,16 +56,16 @@ namespace BinanceTradingBot.Application.Services
                 }
 
                 // Configure strategy parameters
-                var strategyParams = new StrategyParameters();
+                var strategyParams = new BinanceTradingBot.Domain.Models.StrategyParameters();
 
                 // Apply default parameters
                 if (parameters != null)
                 {
                     foreach (var param in parameters)
                     {
-                        if (typeof(StrategyParameters).GetProperty(param.Key) != null)
+                        if (typeof(BinanceTradingBot.Domain.Models.StrategyParameters).GetProperty(param.Key) != null)
                         {
-                            typeof(StrategyParameters).GetProperty(param.Key).SetValue(strategyParams, param.Value);
+                            typeof(BinanceTradingBot.Domain.Models.StrategyParameters).GetProperty(param.Key).SetValue(strategyParams, param.Value);
                         }
                         else
                         {
@@ -75,7 +75,7 @@ namespace BinanceTradingBot.Application.Services
                 }
 
                 // Initialize performance metrics
-                var performance = new StrategyPerformance
+                var performance = new BinanceTradingBot.Domain.Models.StrategyPerformance
                 {
                     Symbol = symbol,
                     Strategy = strategyName,
@@ -111,7 +111,7 @@ namespace BinanceTradingBot.Application.Services
                     var currentPrice = currentCandle.Close;
 
                     // Generate signal based on selected strategy
-                    TradingSignal signal;
+                    BinanceTradingBot.Domain.Models.TradingSignal signal;
                     switch (strategyName.ToLower())
                     {
                         case "tripleconfirmation":
@@ -123,7 +123,7 @@ namespace BinanceTradingBot.Application.Services
                             signal = maStrategy.GenerateSignal();
                             break;
                         default:
-                            signal = new TradingSignal { Action = SignalAction.None };
+                            signal = new BinanceTradingBot.Domain.Models.TradingSignal { Action = SignalAction.None };
                             break;
                     }
 

@@ -4,6 +4,8 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinanceTradingBot", "BinanceTradingBot.csproj", "{0BA5A987-6FDC-3CCF-3F56-66E94A0AD91B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinanceTradingBot.WebDashboard", "BinanceTradingBot.WebDashboard.csproj", "{WEB_DASHBOARD_PROJECT_GUID}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -14,6 +16,10 @@ Global
 		{0BA5A987-6FDC-3CCF-3F56-66E94A0AD91B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0BA5A987-6FDC-3CCF-3F56-66E94A0AD91B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0BA5A987-6FDC-3CCF-3F56-66E94A0AD91B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{WEB_DASHBOARD_PROJECT_GUID}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{WEB_DASHBOARD_PROJECT_GUID}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{WEB_DASHBOARD_PROJECT_GUID}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{WEB_DASHBOARD_PROJECT_GUID}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

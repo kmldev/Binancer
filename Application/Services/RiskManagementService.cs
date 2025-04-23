@@ -7,7 +7,6 @@ using Microsoft.Extensions.Options;
 using BinanceTradingBot.Application.Interfaces;
 using BinanceTradingBot.Domain.Entities;
 using BinanceTradingBot.Domain.Enums;
-
 namespace BinanceTradingBot.Application.Services
 {
     /// <summary>

@@ -1,3 +1,4 @@
+using System; // Add this using statement
 using Microsoft.AspNetCore.Mvc;
 using BinanceTradingBot.WebDashboard.Services;
 using Microsoft.AspNetCore.Authorization;
