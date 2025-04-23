@@ -9,7 +9,7 @@ namespace BinanceTradingBot.WebDashboard.Services
     {
         Task<IEnumerable<PositionDTO>> GetPositionsAsync(bool activeOnly = false);
         Task<PositionDTO?> GetPositionByIdAsync(long id);
-        Task<ServiceResult<PositionDTO>> ClosePositionAsync(long id);
+        Task<ServiceResult<PositionDTO>> ClosePositionAsync(long id, decimal exitPrice);
         Task<ServiceResult<PositionDTO>> UpdateStopLossTakeProfitAsync(long id, decimal? stopLoss, decimal? takeProfit);
     }
 }

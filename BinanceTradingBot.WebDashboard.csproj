@@ -13,13 +13,13 @@
     <!-- Référence au projet principal -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.8.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
     <ProjectReference Include="..\BinanceTradingBot.csproj" />
     
     <!-- Packages pour l'authentification et l'autorisation -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
     
     <!-- Packages for Entity Framework Core tools and design -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />

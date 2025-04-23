@@ -1,6 +1,5 @@
 using BinanceTradingBot.Application.Interfaces;
 using BinanceTradingBot.Domain.Enums;
-using BinanceTradingBot.Domain.Interfaces;
 using BinanceTradingBot.Domain.Models;
 using BinanceTradingBot.WebDashboard.Models.DTOs;
 using System;
@@ -44,7 +43,7 @@ namespace BinanceTradingBot.WebDashboard.Services.Implementation
                 var parameters = new StrategyParametersDTO
                 {
                     StrategyName = "MACrossStrategy",
-                    Parameters = new Dictionary<string, string>
+                    CustomParameters = new Dictionary<string, object>
                     {
                         { "FastMovingAveragePeriod", "12" },
                         { "SlowMovingAveragePeriod", "26" }
@@ -60,7 +59,7 @@ namespace BinanceTradingBot.WebDashboard.Services.Implementation
             // This is a placeholder implementation.
             // You would typically update parameters for the specified strategy.
             Console.WriteLine($"Updating parameters for {strategyName}:");
-            foreach (var param in parameters.Parameters)
+            foreach (var param in parameters.CustomParameters)
             {
                 Console.WriteLine($"- {param.Key}: {param.Value}");
             }

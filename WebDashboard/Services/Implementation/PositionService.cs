@@ -90,7 +90,7 @@ namespace BinanceTradingBot.WebDashboard.Services.Implementation
         /// </summary>
         /// <param name="id">Identifiant de la position à fermer</param>
         /// <returns>Résultat du service avec le DTO de position mis à jour</returns>
-        public async Task<ServiceResult<PositionDTO>> ClosePositionAsync(long id)
+        public async Task<ServiceResult<PositionDTO>> ClosePositionAsync(long id, decimal exitPrice)
         {
             // This method needs the current price to close the position.
             // A real implementation would fetch the current price from the exchange service.
@@ -116,7 +116,7 @@ namespace BinanceTradingBot.WebDashboard.Services.Implementation
             // Let's assume for now that the repository's ClosePositionAsync handles the exit price logic internally or it will be updated later.
             // This is a temporary simplification to proceed with the service implementation structure.
 
-            var position = await _positionRepository.ClosePositionAsync(id, 0); // Dummy exit price for now
+            var position = await _positionRepository.ClosePositionAsync(id, exitPrice);
             if (position == null)
             {
                 return ServiceResult<PositionDTO>.Failure("Position not found.");
